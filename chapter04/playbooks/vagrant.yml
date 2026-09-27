@@ -1,0 +1,38 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Provision a Vagrant machine
+  hosts: localhost
+  vars:
+    box: "centos/8"
+    ansible_private_key_file: .vagrant/machines/default/virtualbox/private_key
+  tasks:
+    - name: Create a Vagrantfile
+      command: "vagrant.exe init {{ box }}"
+      args:
+        creates: Vagrantfile
+
+    - name: Bring up the vagrant machine
+      command: vagrant.exe up
+      args:
+        creates: .vagrant/machines/default/virtualbox/box_meta
+
+    - name: Ensure private key has limited permissions
+      file:
+        path: "{{ ansible_private_key_file }}"
+        mode: '0600'
+
+    - name: Add the vagrant machine to the inventory
+      add_host:
+        name: default
+        ansible_host: 127.0.0.1
+        ansible_port: 2200
+        ansible_user: vagrant
+        ansible_private_key_file: "{{ ansible_private_key_file }}"
+
+- name: Do something to the vagrant machine
+  hosts: default
+  tasks:
+    # The list of tasks would go here
+    - name: Ping
+      ping:
+...
